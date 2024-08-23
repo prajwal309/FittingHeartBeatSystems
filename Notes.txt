@@ -1,0 +1,50 @@
+-- Use Ljung Statistics to define ellipsoidal variation
+-- Create primary transit and secondary transit differently.
+
+6448768 --- Start with this for eccentric phase curve...
+
+2306740 and 4076952 --- https://iopscience.iop.org/article/10.3847/1538-4357/ac69d7/pdf
+8719324, 2697935, 4459068, 4142768, 6145939, 8838070, 9535080  --- Heart beat binary
+
+
+6593363, 2998124@28.59, 4931073@26.9, 10491544@22, 12017140@22, 10849244@24, 6147573@25 day period orbit --- Mutual Illumination is the strongest
+10491544
+
+
+4769799 --- Look at the property of this star.
+
+
+6042191, 9408183 --- 43 days blackhole
+
+
+9588822 --- Look for the rotation period
+
+
+4473933 --- How big is the central star?
+
+
+6603043@110 days --- https://arxiv.org/pdf/1307.2249.pdf
+eccentricity = 0.1429
+
+10845188 --- tidal brightening
+
+4054905 --- https://www.aanda.org/articles/aa/pdf/2022/12/aa44345-22.pdf
+
+
+8410637
+
+
+2987433 --- No obvious secondary transit
+
+
+Notable targets:
+8378656, 6145939 --- Notable targets
+
+Questions:
+If pulsations are present, how does phase, amplitude and frequency evolve?
+How does it change color from Kepler to TESS?
+
+
+#Look at KIC 8560861
+#Compare the luminosity for the distance.
+

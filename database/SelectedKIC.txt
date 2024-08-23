@@ -1,0 +1,187 @@
+4544587 #Done
+3766353 #Probably a CV.
+9278021 #Only mutual illumination
+2445975 #3:2 resonance or something.
+11240948 #Strong tidal forcing
+12405950 #Fitted well. Check for phase variation, and more.
+8196180 #Great target
+7943535 #Not exactly the best target
+10287248 #Strong oscillations signals present.
+8316503 #Probably contaminated by stellar rotation
+4069213 #Slightly eccentric target
+6042116 #Great Target
+8908102 #Great target. Although No Secondary found.
+8488876 #Great target 
+8948424 #Strong mutual Illumination
+4073730 #Strong Pulsation signals
+2973509 #Great Target
+10965963 #Something wrong with the processing of the light curve. Probably strong stellar contamination. 
+5990753 #Not very precise light curve. Probably eclipsing binary.
+6468938 #Has weird light curve. Perhaps third harmonics is too large.
+3248332 #Has strong harmonics. Not idealized secondary eclipse.
+9762519 #Interesting light curve. Although not very precise.
+8364119 #Phase curve is weak. Not a lot of coherence.
+5731312 #Great target.
+11071207 #Great target.
+10601579 #Great target #Some weird effects
+6220470 #Great target #Process the light curve properly.
+9851142 #Great target
+10031808 #Great pulsation signals. But ellipsoidal variation not working well.
+4946680 #Strong mutual illumination.
+5284133 #Great target #Check spectrograph of these system
+7950755  #Code did not work.
+6781535 #Not very coherent phase curve.
+9552608 #Likely background eclipsing binary. Not very strong transit.
+10296163 #Interesting phase curve. Check for coherence.
+5781192 #Pretty bad phase curve. Not coherent.
+6806632 #Mutual illumination very strong.
+4281895 #Strong mutual Illumination
+5393558 #Strong Pulsation signal.
+8695779 #Great target. Good fits converged sort of.
+3120320 #Nope
+11409698 #Looks like mutual illumination
+2306740 #Strong pulsation signal
+5596440 #Very strong eccentricity
+9963461 #Not very strong ellipsoidal variation
+10987439 #Mutual Illumination strong
+6548447 #Weird light curve with flares???
+5218014 #Strong mutual illumination
+6859813 #More than two eclipsing binaries. Heirarchichal system??
+5632781 #Almost equal mass, and should be highly eccentric
+7846730 #The star has very weird drop in flux.
+9468382 #Oscillation visible but not very strong transits.
+5473556 #Appears not to have strong coherence.
+7422883 #Very weird light curve. Model definitely going to fail.
+9579192 #Good target. Ellipsoidal variation not obvious
+4159347 #Drop this. No obvious transit.
+7950775 #Okayish target.
+6781535 #No Ellipsoidal variation visible.
+8488876 #Great target.
+8948424 #Strong mutual illumination
+4851217 #Great target. Very Strong everything.
+2695740 #Great target. Probably strong eclipse timing variation
+8378656 #Great target.
+11197126 #Not a great target. Weak transits.
+3869825  #Not a great target. Secondary eclipse is a disc. Perhaps accreting.
+4445630 #Great target. Equal mass eclipsing binary.
+3869326 #Not a great target. Not prominent eclipsing depth. 
+7914906 #Secondary eclipse not at all obvious
+4076952 #Great target
+8719324 #Heart beat star.
+11820830 #Heart beat star but not very precise light curve.
+10274244 #Lot of pulsation signal. Not consistent phase curve.
+9474222  #Great target.
+6805146 #Great target. Both Pulsation and tidal distortion signal  present
+3102024 #Looks like transit timing variation is strong with this one.
+1571511 #Great target
+6109688 #No strong ellipsoidal variation.
+6359798 #4-1 resonance in the lightcurve.
+8703887 #Strong hump close to transit. No secondary eclipse.
+9509207 #Not coherent signal.
+6523216 #Great target
+6286155 #Not very strong transit signal.
+9344623 #Potentially interesting
+5021732 #Potentially interesting.
+7955301 #A lot of pulsation signal.
+6147122 #Strong Mutual Illumination
+11768970 #Not strong ellipsoidal variation
+9834257 #Strong pulsations
+11874338 #Not prominent transit.
+6421188 #Strong mutual illumination. White dwarf??
+6448768 #Great target
+8023317 #Potentially interesting.
+6847018 #Interesting Pulsation
+5735878 #Triangular shape in the light curve
+6522750 #Interesting bumps. Likely to be integer of orbital.
+6145939 #High eccentricity
+5807579 #Mutual illumination 
+10198109 #Great target
+7177553 #Weird phase folded light curve
+4932691 #Heart beat star. No ellipsoidal variation
+6593363 #Interesting target --- ellipsoidal variation starting to funnel into pulsation
+9119405 #Not very coherent.
+8711548 #Not very coherent signal. 
+9777062 #Strong pulsation signal. At the same time some phase curve.
+4649440 #Not very coherent signal
+8702921 #Great Target
+10753734 #Pulsation signal
+5982353 #Potential pulsation signal.
+4862625 #Maybe some ellipsoidal variation
+9291629 #Large phase curve.
+9673173 #Not very coherent signal.
+5193386 #Good target. Some problem around certain phase. Check the time series.
+2697935 #Very consistent signal. Probably related to certain type of structure.
+9474969 #Great target. Light curve needs better processing
+4252226 #Great target. Both ellipsoidal variation and pulsation.
+4769799 #Great target. Both ellipsoidal variation and pulsation.
+11519226 #Not very coherent signal
+8559863 #Scatter changes with the phase.
+4649305 #Coeherent structure but not very interpretable phase curve.
+10491544 #Strong Mutual illumination signal. Transit depth is varying significantly.
+12017140 #Strong Mutual Illumination signal
+10616571 #Not very coherent signal.
+10849244 #Strong mutual illumination signal
+10268809 #Not prominent ellipsoidal variation. 
+4459068 #Pulsation signal very prominent.
+6147573 #Mutual Illumination signal.
+3858884 #Strong pulsation signal
+7049486 #Strong pulsation signal. Also potential for some ellipsoidal variation.
+4931073 #Great target. Both strong pulsation as well as pulsation signal.
+2998124 #Strong mutual illumination.
+8143170 #Strong mutual illumination.
+6778289 #Strong mutual illumination. Pulsation signals are also present.
+3098194 #Strong stellar contamination. Use Ljung Statisticss
+3938073 #Bad target
+8560861 #Great target. Pulsation and signal are present.
+9418994 #Looks like coherent light curve.
+11923819 #Bad target
+8773948 #Great target
+6877673 #Non coherent light curve
+8314801  #Highly eccentric.
+9529856 #Non-coherent light curve
+12306808 #Strong stellar modulations
+7677005 #Not enough data
+6864859 #Not enough data
+12644769 #not Coherent signal
+8838070  #Highly eccentric system
+11959569 #Some error occured in the code
+9172506 #Great Target
+5700330 #Strong stellar contamination
+8129189 #Has potential
+10920813 #Contamination
+3851949 #Great target
+8430105 #Strong Pulsation
+8845026 #Strong pulsation
+3247294  #Stellar contamination. Some Potential though
+11875511 #Strong stellar rotation. Would be interesting for rotation and orbital resonance.
+9588822 #Very strong stellar rotation
+6063448 #Great target
+9528430 #Not enough data
+4473933 #Not enough data
+6603043 #Not enough data
+8491745 #Great data
+11671429 #Not enough data
+3442054 #Great target
+10001167 #Great target
+7768447 #Not enough data
+6933781 #Not enough data
+5217733 #Extremely sinusoidal data
+9246715 #Not enough data 
+9540226 #Not enough data 
+5786154 #Super-large star
+7037405 #Great target
+9970396 #Stellar contamination
+8052474 #High eccentricity. Tidal brightening
+4054905 #Not obvious transits
+11769146 #Strong systematics
+9153621 #Has potential. Need pre-whitening. Target to test pre-whitening algorithm
+5866138 #Tidal brightening event.
+4663623 #Strong systematics
+5649325 #Pulsation potentials
+8410637 #systematics. Probably should be using SAP
+6757558 #Tidal Brightening
+8868364 #Tidal Brightening event
+6422170 #Stellar pulsation or stellar contamination
+8054233 #Pulsation signal.
+
+#Start fitting with 3851949 --- something is weird ... why triple humps.
