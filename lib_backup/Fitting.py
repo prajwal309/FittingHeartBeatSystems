@@ -57,8 +57,9 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
     if method == "lmfit":
         theta = np.array([theta[param_name].value for param_name in theta])     
         
-    T0, Period, b,  R2_R1, a_R1, Sb, eCosW, eSinW, u11, u12, u21, u22, A1, B1, A2, B2, A3, B3, A4, B4, A5, B5, LogSTD = theta
+    T0, Period, b,  R2_R1, a_R1, Sb, eCosW, eSinW, q11, q12, q21, q22, A1, B1, A2, B2, A3, B3, A4, B4, A5, B5, LogSTD = theta
     STD = 10**LogSTD
+
 
 
     Inclination = np.degrees(np.arccos(b/a_R1))
@@ -70,17 +71,10 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
         if not(is_within_bounds): 
             return -np.inf
    
-    
+    u1 = 2.0*np.sqrt(q11)*q12
+    u2 = np.sqrt(q11) -2.0*np.sqrt(q11)*q12
     
     ecc = np.sqrt(eCosW*eCosW+eSinW*eSinW)
-
-    #if ecc<0.45 or ecc>0.60:
-    #    if  "emcee" in method:
-    #        return -np.inf
-    #    elif "lmfit" in method:
-    #        return np.inf
-    #    else:
-    #        return np.inf
 
     if ecc>0.97:
         print("rejecting eccentricity value greater than 0.97 for now...")
@@ -92,7 +86,8 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
             return np.inf
 
     # Define the parameters of the star and planet
-    Omega = np.arctan2(eSinW,eCosW)
+    Omega = np.arctan2(eCosW,eSinW)
+    #Omega = np.arctan2(eSinW,eCosW)
 
     
     OmegaDegree = np.degrees(Omega)
@@ -105,7 +100,7 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
     BatmanParams.inc = Inclination  # Orbital inclination (in degrees)
     BatmanParams.ecc = ecc  # Eccentricity
     BatmanParams.w = OmegaDegree  # Argument of periastron (in degrees)
-    BatmanParams.u = [u11, u12]  # Limb darkening coefficients (linear and quadratic)
+    BatmanParams.u = [u1, u2]  # Limb darkening coefficients (linear and quadratic)
     BatmanParams.limb_dark = "quadratic"  # Limb darkening model
 
 
@@ -165,11 +160,13 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
     
     ##FInd which one is the right one....
     Phase = (Omega+f)-np.pi/2
-    #Phase[Phase<0]+=2.0*np.pi
-    #Phase[Phase>2.0*np.pi]-=2.0*np.pi
+    
+   
+    
 
    
-    #Phase = (Omega+f)-np.pi
+    #Phase = (Omega+f)-np.pi1
+
     
     
     #This is for the reflection
@@ -183,45 +180,83 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
     #PC2 = A2*np.sin(Phase*1.)
 
     #These are for the tidal forces
-    #PC3 = A3*1./(r*r*r)*np.sin(Phase*2.)+ B3*1./(r*r*r)*np.cos(Phase*2.)
-    PC3 = B3*1./(r*r*r)*np.cos(Phase*2.)
+    PC3 = B3*1./(r*r*r)*np.cos(Phase*2.)#+A3*1./(r*r*r)*np.sin(Phase*2.)
+    #PC3 = B3*1./(r*r*r)*np.cos(Phase*2.)
     #PC4 = A4*np.sin(Phase*2.)+ B4*np.cos(Phase*2.)
+     #Now combine all of the phase curves together.
+    PhaseCurveModel = PC1+PC2+PC3 
+                      #SinPC4+CosPC4+\
+                      #SinPC5+CosPC5
 
-    if np.random.randint(10) == 15:
+
+    Model+=PhaseCurveModel
+    residual = Model - Flux
+    Offset = np.mean(residual)
+    Model-=Offset
+    residual = Model - Flux
+    NewOffset = np.mean(residual)
+    #print("The New offset is:", NewOffset)
+
+    if np.random.randint(2) == 4:
+
+        #Phase at Transit
+        Index = np.argmin(np.abs(Time-T0))
+        print("The phase at transit is given by:", Phase[Index])
         print("The value of B1 is:", B1)
         print("The value of A2 is:", A2)
 
+        tp+=Period
+        ts+=Period
         print("The value of eccentricity is:", ecc)
         print("T0:", T0, "ts:",ts, "tp:", tp)
         print("Period:", Period)
+        #print("The value of PhaseShift is given by:", PhaseFitShift)
         print("Eccentricity:", ecc)
         print("The value of omega is:", Omega )
+
         
-        fig, ax = plt.subplots(figsize=(8,12), nrows=3, ncols=1, sharex=True)
+        fig, ax = plt.subplots(figsize=(8,16), nrows=4, ncols=1, sharex=True)
     
-        ax[0].plot(Time, Phase, "k-")
-        plt.xlabel("Time")
-        plt.ylabel("Phase")
+        ax[0].plot(Time, Phase, "k-", label="Phase")
         ax[0].axvline(tp, color="red", lw=3, label="Periastron Passage")
         ax[0].axvline(ts, color="blue", lw=3, label="Secondary transit time")
         ax[0].axvline(T0, color="yellow", lw=3, label="T0 from the fit.")
         ax[0].legend()
         
+
+        ax[0].set_xlabel("Time")
+        ax[0].set_ylabel("Phase")
+        ax[0].axvline(tp, color="red", lw=3)
+        ax[0].axvline(ts, color="blue", lw=3)
+        ax[0].axvline(T0, color="yellow", lw=3)
+        ax[0].legend()
+        
         
         ax[1].plot(Time, Flux, "ko")
+        ax[1].plot(Time, Model, "r-")
+        ax[1].set_xlabel("Phase")
+        ax[1].set_ylabel("Flux [ppm]")
         ax[1].axvline(tp, color="red", lw=3, label="Periastron Passage")
         ax[1].axvline(ts, color="blue", lw=3, label="Secondary transit time")
         ax[1].axvline(T0, color="yellow", lw=3, label="T0 from the fit.")
-        #ax[1].legend()
+        ax[1].legend()
 
-        ax[2].plot(Time, PC1, "r-", label="Phase Curve 1")
+        ax[2].plot(Time, r, "r-", label="Phase Curve 1")
         ax[2].plot(Time, PC2, "g-", label="Radial Velocity")
         ax[2].plot(Time, PC3, "k-", label="Ellipsoidal Variation")
         ax[2].axvline(tp, color="red", lw=3)
         ax[2].axvline(ts, color="blue", lw=3)
         ax[2].axvline(T0, color="yellow", lw=3)
         ax[2].legend()
-        ax[2].legend()
+
+        ax[3].plot(Time, r, "r-", label="Phase Curve 1")
+        ax[3].plot(Time, PC2, "g-", label="Radial Velocity")
+        ax[3].plot(Time, PC3, "k-", label="Ellipsoidal Variation")
+        ax[3].axvline(tp, color="red", lw=3)
+        ax[3].axvline(ts, color="blue", lw=3)
+        ax[3].axvline(T0, color="yellow", lw=3)
+        ax[3].legend()
+        
         plt.show() 
 
     #SinPC4 = A4*1./(r*r*r*r)*np.sin(Phase*2.)
@@ -230,20 +265,8 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
     #SinPC5 = A5*1./(r*r*r*r*r)*np.sin(Phase*2.)
     #CosPC5 = B5*1./(r*r*r*r*r)*np.cos(Phase*2.)
 
-    #Now combine all of the phase curves together.
-    PhaseCurveModel = PC2+PC3+PC1 
-                      #SinPC4+CosPC4+\
-                      #SinPC5+CosPC5
-
-
-    Model+=PhaseCurveModel
-
-    residual = Model - Flux
-    Offset = np.mean(residual)
-    Model-=Offset
-    residual = Model - Flux
-    NewOffset = np.mean(residual)
-    #print("The New offset is:", NewOffset)
+  
+    
     residuals = np.sum((residual)**2)
     
     global BestResidual
@@ -262,24 +285,7 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
 
         print("The Save dictionary is given by:", SaveDictionary)
 
-        '''print("Ecc:", ecc, "   omega", Omega)
-        plt.figure()
-        plt.subplot(211)
-        plt.plot(Time, Flux-1, "ko")
-        plt.plot(Time, FluxTransit-1, "g-")
-        plt.plot(Time, FluxSecondary, "g:")
-        plt.plot(Time, SinPC1, "r-")
-        #plt.plot(Time, CosPC1, "r:")
-        #plt.plot(Time, SinPC2, "b-")
-        plt.plot(Time, CosPC2, "b:")
-        plt.ylabel("Flux")
-        plt.subplot(212)
-        plt.plot(Time, Flux-Model, "ko")
-        plt.axhline(0, color="red")
-        plt.ylabel("Residual")
-        plt.xlabel("Time")
-        plt.tight_layout()
-        plt.show()'''
+    
 
         with open('BestParameters/%s.pkl' %CurrentSaveName, 'wb') as f:
             pickle.dump(SaveDictionary, f)
@@ -343,7 +349,7 @@ def MinimizeUsingEmcee(initial_guess, thetaBounds, Time, Flux):
     for i in range(1,nDim):
         LowerVal = thetaBounds[i][0]
         UpperVal = thetaBounds[i][1]
-        #T0, Period, b,  R2_R1,  a_R1, Sb, eCosW, eSinW, u11, u12, u21,u22 = theta
+        #T0, Period, b,  R2_R1,  a_R1, Sb, eCosW, eSinW, q11, q12, q21, q22 = theta
         if i == 1: #Period
             CurrentWalker = np.random.normal(CurrentPeriod, 1e-6, (nWalkers))
         elif i == 3: #R2_R1
@@ -424,7 +430,7 @@ def StartFittingBinned(Time, Flux, Params, SaveName=None, ModelTransit=True) :
     TStep = Params['TStep']
 
     Parameters = ["T0", "Period", "b", "R2_R1", "a_R1", "Sb", "eCosW", "eSinW",
-                   "u11", "u12", "u21", "u22",
+                   "q11", "q12", "q21", "q22",
                    "A1", "B1", "A2", "B2", "A3", "B3", "A4", "B4", "A5", "B5", "LogSTD"]
     
 
@@ -464,19 +470,19 @@ def StartFittingBinned(Time, Flux, Params, SaveName=None, ModelTransit=True) :
                         (0,1),                                               #Use the impact parameter                    
                         (0, 1.0),                                            #Radius ratio 
                         (2,100.0),                                           #Scaled Distance                         
-                        (1e-10,4.0),                                             #Brightness ratio 
+                        (0,4.0),                                             #Brightness ratio 
                         (-1.0,1.0),                                          #eCosW 
                         (-1.0,1.0),                                          #eSinW 
-                        (0.3,0.5),                                           #u11   
-                        (0.3,0.5),                                           #u12                   
-                        (0.3,0.5),                                           #u21
-                        (0.3,0.5),                                           #u22               "A1", "B1", "A2", "B2", "A3", "B3", "A4", "B4", "A5", "B5", "LogSTD"]
+                        (0,1),                                               #q11   
+                        (0,1),                                               #q12                   
+                        (0,1),                                               #q21
+                        (0,1),                                               #q22
                         (-1,1),                                              #A1
-                        (-1,1),                                              #B1           
+                        (-1,1),                                              #B1 and B1 has to be negative???      
                         (-1,1),                                              #A2
-                        (-1,1),                                              #B2                   
+                        (-1,0),                                              # --- not used currently               
                         (-0.1,0.1),                                          #A3
-                        (-0.1,0.1),                                          #B3   
+                        (-1.0, 1.0),                                         #B3 --- not used currently   
                         (-0.001,0.001),                                      #A4   
                         (-0.001,0.001),                                      #B4   
                         (-0.001,0.001),                                      #A5
@@ -498,11 +504,11 @@ def StartFittingBinned(Time, Flux, Params, SaveName=None, ModelTransit=True) :
                         (0.3,0.5),                                           #u21
                         (0.3,0.5),                                           #u22               "A1", "B1", "A2", "B2", "A3", "B3", "A4", "B4", "A5", "B5", "LogSTD"]
                         (-1,1),                                              #A1
-                        (-1,1),                                              #B1           
+                        (-1,0),                                              #B1 and B1 has to be negative.      
                         (-1,1),                                              #A2
-                        (-1,1),                                              #B2                   
+                        (-1,0),                                              # --- not used currently               
                         (-0.1,0.1),                                          #A3
-                        (-0.1,0.1),                                          #B3   
+                        (-1.0, 0),                                           #B3 and B3 has to be negative  
                         (-0.001,0.001),                                      #A4   
                         (-0.001,0.001),                                      #B4   
                         (-0.001,0.001),                                      #A5
@@ -511,11 +517,14 @@ def StartFittingBinned(Time, Flux, Params, SaveName=None, ModelTransit=True) :
                         ]
     param_bounds = np.array(param_bounds)
     print("Starting the minimization process")
+    
+    input("Wait here...")
 
 
 
 
-
+   
+    
     
     #Counter = 1
     #if os.path.exists('BestParameters/%s.pkl' %CurrentSaveName):

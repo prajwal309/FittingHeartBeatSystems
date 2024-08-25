@@ -9,12 +9,25 @@ import pickle
 import os
 from .Functions import *
 
+def BuildModel(Time, theta):
 
+    #Now use the theta
+
+    T0, TStep, a_R, R2_R1, Sb, eCosW, eSinW, u11, u12, u21,u22 = theta
+    
+
+    TransitModelSp_z = ellc.lc(TimeSp_z, t_zero=T0, radius_1=1./a_Rs,radius_2=R2_R1/a_Rs,\
+            sbratio=Sb_z, period=Period, incl=Inclination, ld_1='quad',\
+            ldc_1=[u11_z, u12_z],ld_2='quad',ldc_2=[u21_z, u22_z], t_exp=TStep,\
+            shape_1='sphere', shape_2='sphere', f_c=eCosW, f_s=eSinW, n_int=3, \
+            grid_1="fine", grid_2="fine")
+
+    #What are the parameters required
 
 def EvaluateTransitModel(theta, Time, Flux):
 
     #Now use the theta
-    global TStep, TransitToggle
+    global TStep
     print("The time step is given by:", TStep)
     print("The length of theta is given by:", theta)
 
@@ -52,7 +65,7 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
 
     #method can be emcee among others...
     #Now use the theta
-    global TStep, BatmanParams, Counter, CurrentSaveName, Parameters, TransitToggle
+    global TStep, BatmanParams, Counter, CurrentSaveName, Parameters
    
     if method == "lmfit":
         theta = np.array([theta[param_name].value for param_name in theta])     
@@ -74,16 +87,8 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
     
     ecc = np.sqrt(eCosW*eCosW+eSinW*eSinW)
 
-    #if ecc<0.45 or ecc>0.60:
-    #    if  "emcee" in method:
-    #        return -np.inf
-    #    elif "lmfit" in method:
-    #        return np.inf
-    #    else:
-    #        return np.inf
-
-    if ecc>0.97:
-        print("rejecting eccentricity value greater than 0.97 for now...")
+    if ecc>0.95:
+        print("rejecting eccentricity value greater than 0.5 for now...")
         if  "emcee" in method:
             return -np.inf
         elif "lmfit" in method:
@@ -92,10 +97,7 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
             return np.inf
 
     # Define the parameters of the star and planet
-    Omega = np.arctan2(eSinW,eCosW)
-
-    
-    OmegaDegree = np.degrees(Omega)
+    Omega = np.degrees(np.arctan(eSinW/eCosW))
 
 
     BatmanParams.t0 = T0  # Transit center time
@@ -104,7 +106,7 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
     BatmanParams.a = a_R1  # Semi-major axis (in units of stellar radius)
     BatmanParams.inc = Inclination  # Orbital inclination (in degrees)
     BatmanParams.ecc = ecc  # Eccentricity
-    BatmanParams.w = OmegaDegree  # Argument of periastron (in degrees)
+    BatmanParams.w = Omega  # Argument of periastron (in degrees)
     BatmanParams.u = [u11, u12]  # Limb darkening coefficients (linear and quadratic)
     BatmanParams.limb_dark = "quadratic"  # Limb darkening model
 
@@ -117,10 +119,8 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
 
     
 
-    # Compute the time of periastron passage and time of secondary eclipse
+    # Compute the eccentric planet secondary transit light curve
     tp, ts = timePrimary_to_timeSecondary(T0, Period, ecc, Omega )
-    
-      
 
     Fp = R2_R1*R2_R1*Sb
     BatmanParams.t_secondary = ts
@@ -141,11 +141,10 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
     
     FluxSecondary = m_Sec.light_curve(BatmanParams) -1.0 -Fp
 
-    Model = TransitToggle*(FluxTransit+FluxSecondary)
+    Model = FluxTransit+FluxSecondary 
     
     #print Calculating the orbital elements
     r, RV, f = calculateOrbitalElements(Time, tp, Period, ecc, Omega)
-    #r, RV, f = calculateOrbitalElements(Time, T0, Period, ecc, Omega)
 
     
     
@@ -162,67 +161,19 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
             return np.inf
     
     #Generate the secondary eclipse
-    
-    ##FInd which one is the right one....
+    #Plot and see
     Phase = (Omega+f)-np.pi/2
-    #Phase[Phase<0]+=2.0*np.pi
-    #Phase[Phase>2.0*np.pi]-=2.0*np.pi
-
-   
-    #Phase = (Omega+f)-np.pi
-    
     
     #This is for the reflection
     PC1 = B1*1./(r*r)*np.cos(Phase*1.)
-    #PC1 = B1*1./(r*r)*np.sin(Phase*1.+np.pi/2)
-
     
     
     #This is for the radial velocity 
-    PC2 = A2*RV#+B2*np.cos(Phase*1.)
-    #PC2 = A2*np.sin(Phase*1.)
+    PC2 = A2*np.sin(Phase*1.) # +B2*np.cos(Phase*1.)
 
     #These are for the tidal forces
-    #PC3 = A3*1./(r*r*r)*np.sin(Phase*2.)+ B3*1./(r*r*r)*np.cos(Phase*2.)
-    PC3 = B3*1./(r*r*r)*np.cos(Phase*2.)
+    PC3 = A3*1./(r*r*r)*np.sin(Phase*2.)+ B3*1./(r*r*r)*np.cos(Phase*2.)
     #PC4 = A4*np.sin(Phase*2.)+ B4*np.cos(Phase*2.)
-
-    if np.random.randint(10) == 15:
-        print("The value of B1 is:", B1)
-        print("The value of A2 is:", A2)
-
-        print("The value of eccentricity is:", ecc)
-        print("T0:", T0, "ts:",ts, "tp:", tp)
-        print("Period:", Period)
-        print("Eccentricity:", ecc)
-        print("The value of omega is:", Omega )
-        
-        fig, ax = plt.subplots(figsize=(8,12), nrows=3, ncols=1, sharex=True)
-    
-        ax[0].plot(Time, Phase, "k-")
-        plt.xlabel("Time")
-        plt.ylabel("Phase")
-        ax[0].axvline(tp, color="red", lw=3, label="Periastron Passage")
-        ax[0].axvline(ts, color="blue", lw=3, label="Secondary transit time")
-        ax[0].axvline(T0, color="yellow", lw=3, label="T0 from the fit.")
-        ax[0].legend()
-        
-        
-        ax[1].plot(Time, Flux, "ko")
-        ax[1].axvline(tp, color="red", lw=3, label="Periastron Passage")
-        ax[1].axvline(ts, color="blue", lw=3, label="Secondary transit time")
-        ax[1].axvline(T0, color="yellow", lw=3, label="T0 from the fit.")
-        #ax[1].legend()
-
-        ax[2].plot(Time, PC1, "r-", label="Phase Curve 1")
-        ax[2].plot(Time, PC2, "g-", label="Radial Velocity")
-        ax[2].plot(Time, PC3, "k-", label="Ellipsoidal Variation")
-        ax[2].axvline(tp, color="red", lw=3)
-        ax[2].axvline(ts, color="blue", lw=3)
-        ax[2].axvline(T0, color="yellow", lw=3)
-        ax[2].legend()
-        ax[2].legend()
-        plt.show() 
 
     #SinPC4 = A4*1./(r*r*r*r)*np.sin(Phase*2.)
     #CosPC4 = B4*1./(r*r*r*r)*np.cos(Phase*2.)
@@ -231,7 +182,8 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
     #CosPC5 = B5*1./(r*r*r*r*r)*np.cos(Phase*2.)
 
     #Now combine all of the phase curves together.
-    PhaseCurveModel = PC2+PC3+PC1 
+    PhaseCurveModel = PC1+PC2+PC3
+                      #+\
                       #SinPC4+CosPC4+\
                       #SinPC5+CosPC5
 
@@ -252,15 +204,13 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
         BestResidual = residuals
         #print("The value of inclination is given by:", Inclination)
         print("Counter:", Counter," Residual::", residuals)
-        print("Ecc:", ecc, " omega:", Omega)
-        print(" tp:", tp, " T0:", T0)
 
         SaveDictionary = {}
         SaveDictionary['Residual'] = residuals
         for ParamCounter, Param in enumerate(Parameters):
             SaveDictionary[Param] = theta[ParamCounter]
 
-        print("The Save dictionary is given by:", SaveDictionary)
+        #print("The Save dictionary is given by:", SaveDictionary)
 
         '''print("Ecc:", ecc, "   omega", Omega)
         plt.figure()
@@ -283,7 +233,7 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
 
         with open('BestParameters/%s.pkl' %CurrentSaveName, 'wb') as f:
             pickle.dump(SaveDictionary, f)
-        print("\n"*3)
+
        
 
         CurrentTStep = np.nanmedian(np.diff(Time))    
@@ -308,7 +258,7 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
             pickle.dump(FitParams, f)
 
 
-        np.save('BestModel/%s.npy' %CurrentSaveName, np.transpose((Time, Flux, Model, PC3, PC2, PC1)))
+        np.save('BestModel/%s.npy' %CurrentSaveName, np.transpose((Time, Flux, Model, PC3, PC2)))
 
         
     Counter+=1
@@ -367,7 +317,7 @@ def MinimizeUsingEmcee(initial_guess, thetaBounds, Time, Flux):
     StartInit[:,7] = initial_guess*(1+np.random.normal(0,1e-4,len(initial_guess)))
   
     
-    NSteps = 5000
+    NSteps = 500
     
     sampler = emcee.EnsembleSampler(nWalkers, nDim, EvaluateModel, \
               args=[Time, Flux, thetaBounds, "emcee"])    
@@ -407,15 +357,13 @@ def FitTransitModelWithLmfit(theta, thetaBounds, Time, Flux):
 
 
 
-def StartFittingBinned(Time, Flux, Params, SaveName=None, ModelTransit=True) :
+def StartFittingBinned(Time, Flux, Params, SaveName=None):
     #Use batman for finding the best fit initially
     # Fit the transit using Nelder-Mead optimization
-
-    global TStep,  BatmanParams, Counter, Parameters, TransitToggle
+    global TStep,  BatmanParams, Counter, Parameters
     global CurrentPeriod, CurrentT0, CurrentSaveName, BestResidual
 
     CurrentSaveName = SaveName
-    TransitToggle = float(ModelTransit)
 
     CurrentPeriod = Params['Period']
     CurrentT0 = Params['T0']
@@ -423,6 +371,7 @@ def StartFittingBinned(Time, Flux, Params, SaveName=None, ModelTransit=True) :
     BatmanParams = batman.TransitParams()
     TStep = Params['TStep']
 
+    
     Parameters = ["T0", "Period", "b", "R2_R1", "a_R1", "Sb", "eCosW", "eSinW",
                    "u11", "u12", "u21", "u22",
                    "A1", "B1", "A2", "B2", "A3", "B3", "A4", "B4", "A5", "B5", "LogSTD"]
@@ -441,12 +390,9 @@ def StartFittingBinned(Time, Flux, Params, SaveName=None, ModelTransit=True) :
         initial_guess = np.array(BestWalker)
         return BestResidual, initial_guess
 
-   
-
     #Check if the parameters already start:
     if os.path.exists('BestParameters/%s.pkl' %CurrentSaveName):
         BestResidual, initial_guess = getInitialGuess('BestParameters/%s.pkl' %CurrentSaveName)
-        
          
     #ActItem1: Initialize using initial guess
     else:
@@ -454,68 +400,42 @@ def StartFittingBinned(Time, Flux, Params, SaveName=None, ModelTransit=True) :
         initial_guess = [Params['T0'], Params['Period'], Params['b'],  Params['R2_R1'], Params['a_R1'], \
                         Params['Sb'],Params['eCosW'],Params['eSinW'], \
                         Params['u11'], Params['u12'], Params['u21'], Params['u22'], 
-                        -0.0001, -0.0001, -0.0001, -0.001, -0.0001, -0.0001, -0.00001, -0.00001, -0.00001, -0.00001, -2] 
-
-        #               
-
-    if TransitToggle:
-        param_bounds = [(Params['T0']-0.1, Params['T0']+0.1),                #Use the time of conjunction
-                        (Params['Period']-0.001, Params['Period']+0.001),        #Use the time of the period
-                        (0,1),                                               #Use the impact parameter                    
-                        (0, 1.0),                                            #Radius ratio 
-                        (2,100.0),                                           #Scaled Distance                         
-                        (1e-10,4.0),                                             #Brightness ratio 
-                        (-1.0,1.0),                                          #eCosW 
-                        (-1.0,1.0),                                          #eSinW 
-                        (0.3,0.5),                                           #u11   
-                        (0.3,0.5),                                           #u12                   
-                        (0.3,0.5),                                           #u21
-                        (0.3,0.5),                                           #u22               "A1", "B1", "A2", "B2", "A3", "B3", "A4", "B4", "A5", "B5", "LogSTD"]
-                        (-1,1),                                              #A1
-                        (-1,1),                                              #B1           
-                        (-1,1),                                              #A2
-                        (-1,1),                                              #B2                   
-                        (-0.1,0.1),                                          #A3
-                        (-0.1,0.1),                                          #B3   
-                        (-0.001,0.001),                                      #A4   
-                        (-0.001,0.001),                                      #B4   
-                        (-0.001,0.001),                                      #A5
-                        (-0.001,0.001),                                      #B5   
-                        (-6,0)                                               #LogSTD
-                        ]
-    else:
-        print("Using broad T0 priors")
-        param_bounds = [(-Params['Period']*0.25, Params['Period']*0.75),     #Use the time of conjunction
-                        (Params['Period']-0.001, Params['Period']+0.001),    #Use the time of the period
-                        (0,1),                                               #Use the impact parameter                    
-                        (0, 1.0),                                            #Radius ratio 
-                        (2,100.0),                                           #Scaled Distance                         
-                        (0,4.0),                                             #Brightness ratio 
-                        (-1.0,1.0),                                          #eCosW 
-                        (-1.0,1.0),                                          #eSinW 
-                        (0.3,0.5),                                           #u11   
-                        (0.3,0.5),                                           #u12                   
-                        (0.3,0.5),                                           #u21
-                        (0.3,0.5),                                           #u22               "A1", "B1", "A2", "B2", "A3", "B3", "A4", "B4", "A5", "B5", "LogSTD"]
-                        (-1,1),                                              #A1
-                        (-1,1),                                              #B1           
-                        (-1,1),                                              #A2
-                        (-1,1),                                              #B2                   
-                        (-0.1,0.1),                                          #A3
-                        (-0.1,0.1),                                          #B3   
-                        (-0.001,0.001),                                      #A4   
-                        (-0.001,0.001),                                      #B4   
-                        (-0.001,0.001),                                      #A5
-                        (-0.001,0.001),                                      #B5   
-                        (-6,0)                                               #LogSTD
-                        ]
+                        0.0001, -0.0001, 0.0001, -0.001, 0.0001, 0.0001, 0.00001, 0.00001, 0.00001, 0.00001, -2] 
+    param_bounds = [(Params['T0']-0.1, Params['T0']+0.1),                #Use the time of conjunction
+                    (Params['Period']-0.01, Params['Period']+0.01),        #Use the time of the period
+                    (0,1),                                               #Use the impact parameter                    
+                    (0, 2.0),                                            #Radius ratio 
+                    (2,100.0),                                           #Scaled Distance                         
+                    (0,4.0),                                             #Brightness ratio 
+                    (0,1.0),                                             #eCosW 
+                    (0,1.0),                                             #eSinW 
+                    (0.3,0.5),        
+                    (0.3,0.5),
+                    (0.3,0.5),
+                    (0.3,0.5),
+                    (-1,1),
+                    (-1,1),
+                    (-1,1),
+                    (-1,1),
+                    (-0.1,0.1),
+                    (-0.1,0.1),
+                    (-0.001,0.001),
+                    (-0.001,0.001),
+                    (-0.001,0.001),
+                    (-0.001,0.001),
+                    (-6,0)
+                    ]
+   
     param_bounds = np.array(param_bounds)
     print("Starting the minimization process")
+    #Check whether there is T0 or secondary in the given sector if not fit only non tranist
 
 
 
 
 
+   
+    
     
     #Counter = 1
     #if os.path.exists('BestParameters/%s.pkl' %CurrentSaveName):
