@@ -12,8 +12,6 @@ from multiprocessing import Pool
 
 def Likelihood(theta, Time, Flux, prior=False):
 
-    
-
     #unpack the parameters
     T0, Period, Rp, a_R, b, SQRTe_SinW, SQRTe_CosW, \
     q1, q2, Fp, B1, A2, B2, LogSTD = theta
