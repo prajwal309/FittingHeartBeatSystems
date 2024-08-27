@@ -3,7 +3,7 @@ import glob
 import os
 
 #Ask for more nodes so this runs much faster.
-BaseText = "#!/bin/bash\nsource /etc/profile\nmodule load anaconda/2022b \nexport OMP_NUM_THREADS=NUMCORES\nexport MKL_NUM_THREADS=NUMCORES\n\npython ProcessData.py $1 NUMCORES"
+BaseText = "#!/bin/bash\nsource /etc/profile\nmodule load anaconda/2022b \nexport OMP_NUM_THREADS=NUMCORES\nexport MKL_NUM_THREADS=NUMCORES\n\npython ProcessAndFitTransit.py $1 $2 \n"
 
 os.system("rm mapper.sh")
 os.system("rm input.txt")
@@ -18,17 +18,22 @@ print("Number of Process is is:", NumProcess)
 Command = "LLMapReduce --mapper mapper.sh --input input.txt --np=[%s,%s,%s] --keep=true " %(NumNodes,NumProcess,NumCores)
 BaseText = BaseText.replace("NUMCORES", str(NumCores))
 
-
-
 #Now load for all the text files in the Generated light curves folder.
 
-#Modify the Launcher.py
+fileList = glob.glob("ProcessedLightCurve/*")
+print("The number of files is:", len(fileList))
 
-for FolderName in SubFolders:
-    print("The name of the subfolder is given by:", FolderName)
+
+#Things you need in input.txt
+#python3 ProcessAndFitTransit.py 4851217 ProcessedLightCurve/004851217.txt
+
+for fileItem in fileList:
+    print("The name of the subfolder is given by:", fileItem)
     #Launch the code in the triple mode
+    KICValue = str(int(fileItem.split("/")[-1].split(".")[0]))
+    print(KICValue)
     with open("input.txt", "a") as f:
-        f.write(FolderName+"\n")
+        f.write(KICValue+" "+fileItem+"\n")
     
     
 #Now create the mapper.sh

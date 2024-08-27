@@ -82,7 +82,7 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
     #    else:
     #        return np.inf
 
-    if ecc>0.97:
+    if ecc>0.90:
         print("rejecting eccentricity value greater than 0.97 for now...")
         if  "emcee" in method:
             return -np.inf
@@ -179,7 +179,7 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
     
     
     #This is for the radial velocity 
-    PC2 = A2*RV#+B2*np.cos(Phase*1.)
+    PC2 = A1*RV#+B2*np.cos(Phase*1.)
     #PC2 = A2*np.sin(Phase*1.)
 
     #These are for the tidal forces
@@ -222,7 +222,8 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
         ax[2].axvline(T0, color="yellow", lw=3)
         ax[2].legend()
         ax[2].legend()
-        plt.show() 
+        plt.savefig("RunFigures/%s.png" %CurrentSaveName) 
+        plt.close()
 
     #SinPC4 = A4*1./(r*r*r*r)*np.sin(Phase*2.)
     #CosPC4 = B4*1./(r*r*r*r)*np.cos(Phase*2.)
@@ -242,8 +243,6 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
     Offset = np.mean(residual)
     Model-=Offset
     residual = Model - Flux
-    NewOffset = np.mean(residual)
-    #print("The New offset is:", NewOffset)
     residuals = np.sum((residual)**2)
     
     global BestResidual
@@ -262,27 +261,42 @@ def EvaluateModel(theta, Time, Flux, thetaBounds, method):
 
         print("The Save dictionary is given by:", SaveDictionary)
 
-        '''print("Ecc:", ecc, "   omega", Omega)
-        plt.figure()
-        plt.subplot(211)
-        plt.plot(Time, Flux-1, "ko")
-        plt.plot(Time, FluxTransit-1, "g-")
-        plt.plot(Time, FluxSecondary, "g:")
-        plt.plot(Time, SinPC1, "r-")
-        #plt.plot(Time, CosPC1, "r:")
-        #plt.plot(Time, SinPC2, "b-")
-        plt.plot(Time, CosPC2, "b:")
-        plt.ylabel("Flux")
-        plt.subplot(212)
-        plt.plot(Time, Flux-Model, "ko")
-        plt.axhline(0, color="red")
-        plt.ylabel("Residual")
-        plt.xlabel("Time")
-        plt.tight_layout()
-        plt.show()'''
+        print("Ecc:", ecc, "   omega", Omega)
+        
+        #Three panel figure
+        YLimMin = np.min(PhaseCurveModel)*0.75
+        YLimMax = np.max(PhaseCurveModel)*1.25
 
-        with open('BestParameters/%s.pkl' %CurrentSaveName, 'wb') as f:
-            pickle.dump(SaveDictionary, f)
+        fig, ax = plt.subplots(figsize=(8,12), nrows=3, ncols=1)
+        
+        ax[0].plot(Time, Flux, "ko")
+        ax[0].plot(Time, Model, "r-", lw=2)
+        ax[0].set_ylabel("Flux")
+        ax[0].set_xlim(min(Time)-0.01, max(Time)+0.01)
+
+        ax[1].plot(Time, Flux, "ko")
+        ax[1].plot(Time, Model, "r-", lw=2)
+        ax[1].set_ylabel("Flux")
+        ax[1].set_ylim(YLimMin, YLimMax)
+        
+        ax[2].plot(Time, Flux-Model, "ko")
+        ax[2].axhline(0, color="red")
+        ax[2].set_ylabel("Residual")
+        ax[2].set_xlabel("Time")
+        plt.tight_layout()
+        plt.savefig("RunFigures/%s.png" %CurrentSaveName) 
+        plt.close()
+
+
+        #with open('BestParameters/%s.pkl' %CurrentSaveName, 'wb') as f:
+        #    pickle.dump(SaveDictionary, f)
+        #print("\n"*3)
+
+     
+        with open('BestParameters/%s.txt' %CurrentSaveName, 'w') as f:
+            for key, value in SaveDictionary.items():
+                Text = '%s:%s\n' %(key, str(value))
+                f.write(Text)
         print("\n"*3)
        
 
@@ -440,24 +454,41 @@ def StartFittingBinned(Time, Flux, Params, SaveName=None, ModelTransit=True) :
               BestWalker.append(value)
         initial_guess = np.array(BestWalker)
         return BestResidual, initial_guess
+    
+
+    def getInitialGuessTxt(Location):
+        AllData = np.loadtxt(Location, dtype=str, delimiter=":")
+        initial_guess = []
+
+        
+        for Entry in AllData:
+           
+            item = Entry[0]
+            value = Entry[1]
+            print(item, value)
+            if ("Residual" in item):
+              BestResidual = float(value)
+            else:
+              initial_guess.append(float(value))
+        initial_guess = np.array(initial_guess)
+        return BestResidual, initial_guess
 
    
 
     #Check if the parameters already start:
-    if os.path.exists('BestParameters/%s.pkl' %CurrentSaveName):
-        BestResidual, initial_guess = getInitialGuess('BestParameters/%s.pkl' %CurrentSaveName)
-        
-         
-    #ActItem1: Initialize using initial guess
-    else:
+    #if os.path.exists('BestParameters/%s.pkl' %CurrentSaveName):
+    #    BestResidual, initial_guess = getInitialGuess('BestParameters/%s.pkl' %CurrentSaveName)
+
+    
+    if os.path.exists('BestParameters/%s.txt' %CurrentSaveName):
+        BestResidual, initial_guess = getInitialGuessTxt('BestParameters/%s.txt' %CurrentSaveName)  
+    else:      
         BestResidual = np.inf
         initial_guess = [Params['T0'], Params['Period'], Params['b'],  Params['R2_R1'], Params['a_R1'], \
                         Params['Sb'],Params['eCosW'],Params['eSinW'], \
                         Params['u11'], Params['u12'], Params['u21'], Params['u22'], 
                         -0.0001, -0.0001, -0.0001, -0.001, -0.0001, -0.0001, -0.00001, -0.00001, -0.00001, -0.00001, -2] 
-
-        #               
-
+    BestResidual+=1e-3    
     if TransitToggle:
         param_bounds = [(Params['T0']-0.1, Params['T0']+0.1),                #Use the time of conjunction
                         (Params['Period']-0.001, Params['Period']+0.001),        #Use the time of the period
@@ -539,9 +570,12 @@ def StartFittingBinned(Time, Flux, Params, SaveName=None, ModelTransit=True) :
 
         print("\n\nStarting the fit with Powell")
         Counter = 1
-        if os.path.exists('BestParameters/%s.pkl' %CurrentSaveName):
-            BestResidual, initial_guess = getInitialGuess('BestParameters/%s.pkl' %CurrentSaveName)
-        BestResidual+=1e-7    
+
+        
+        if os.path.exists('BestParameters/%s.txt' %CurrentSaveName):
+            BestResidual, initial_guess = getInitialGuessTxt('BestParameters/%s.txt' %CurrentSaveName)
+
+        BestResidual+=1e-5    
         resultP = minimize(EvaluateModel, initial_guess, args=(Time, Flux, param_bounds, "powell"), method='BFGS', bounds=param_bounds)
        
     
